@@ -1,0 +1,111 @@
+// Untuk pindah ke PostgreSQL/MySQL: ganti provider & DATABASE_URL, lalu `prisma db push`.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String   // hash bcrypt
+  role      String   @default("USER") // "USER" | "ADMIN"
+  age       Int?
+  school    String?
+  isActive  Boolean  @default(true)   // untuk menonaktifkan user
+  createdAt DateTime @default(now())
+
+  progress MaterialProgress[]
+  attempts TestAttempt[]
+  activities ActivityProgress[]
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  content     String   // bagian dipisah dengan baris "## Judul Bagian"
+  coverImage  String?  // emoji atau URL gambar
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  progress  MaterialProgress[]
+  questions Question[]
+}
+
+model MaterialProgress {
+  id         String    @id @default(cuid())
+  userId     String
+  materialId String
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId])
+}
+
+model Question {
+  id            String @id @default(cuid())
+  materialId    String
+  questionText  String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctAnswer String // "A" | "B" | "C" | "D"
+  explanation   String
+
+  material Material     @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  answers  TestAnswer[]
+}
+
+model TestAttempt {
+  id              String    @id @default(cuid())
+  userId          String
+  startedAt       DateTime  @default(now())
+  finishedAt      DateTime?
+  durationSeconds Int?
+  score           Int?      // 0-100
+  totalQuestions  Int       @default(0)
+  correctCount    Int       @default(0)
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers TestAnswer[]
+}
+
+model TestAnswer {
+  id             String  @id @default(cuid())
+  attemptId      String
+  questionId     String
+  selectedAnswer String
+  isCorrect      Boolean
+
+  attempt  TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+// Penanda aktivitas yang sudah diselesaikan user (pretest, postest-1, dst.)
+model ActivityProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  activityKey String
+  completedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, activityKey])
+}
+
+// Kunci aktivitas oleh admin. Tidak ada baris = terbuka.
+model ActivitySetting {
+  key       String   @id
+  isOpen    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}

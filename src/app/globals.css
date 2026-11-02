@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-langit-soft font-body text-lg text-tinta antialiased; }
+  h1, h2, h3 { @apply font-display font-bold leading-tight; }
+  :focus-visible { @apply outline outline-4 outline-offset-2 outline-tinta; }
+}
+
+@layer components {
+  /* Tombol besar, mudah ditekan, memantul saat disentuh */
+  .btn { @apply inline-flex min-h-[3.5rem] items-center justify-center rounded-full px-8 font-display text-xl font-bold transition-transform duration-150 hover:-translate-y-1 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60; }
+  .btn-merah { @apply btn bg-jantung text-white shadow-[0_6px_0_#D93A5E]; }
+  .btn-putih { @apply btn bg-white text-tinta shadow-[0_6px_0_#3A2D4F22]; }
+  .input { @apply min-h-[3.5rem] w-full rounded-2xl border-4 border-white bg-white px-5 text-lg shadow-inner placeholder:text-tinta/40 focus:border-langit; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Isi materi muncul satu per satu dari bawah */
+@keyframes naik { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.reveal { animation: naik 0.55s ease-out both; }
