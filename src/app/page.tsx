@@ -24,7 +24,7 @@ export default function Landing() {
       <section className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-4 py-10 md:flex-row md:py-16">
         <div className="flex-1 text-center md:text-left">
           <h1 className="text-4xl md:text-6xl">Halo! Aku Si Detak, jantungmu yang tak pernah istirahat.</h1>
-          <p className="mx-auto mt-5 max-w-xl md:mx-0">Yuk belajar cara menjaga jantung dan tekanan darah tetap sehat. Cocok untuk kamu yang berusia 8 sampai 12 tahun!</p>
+          <p className="mx-auto mt-5 max-w-xl md:mx-0">Yuk belajar cara menjaga jantung dan tekanan darah tetap sehat. Cocok untuk kamu yang berusia remaja!</p>
           <div className="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
             <Link href="/daftar" className="btn-merah">Daftar gratis</Link>
             <Link href="/login" className="btn-putih">Aku sudah punya akun</Link>
