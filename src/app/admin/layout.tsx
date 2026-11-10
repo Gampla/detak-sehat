@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
 
 // Kerangka semua halaman admin. Lapisan keamanan kedua setelah middleware.
+// Halaman ini membaca database & sesi login, jadi harus dibuat saat diakses (bukan saat build)
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

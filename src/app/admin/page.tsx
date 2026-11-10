@@ -8,6 +8,9 @@ const AKTIVITAS = [
   { key: "aktivitas-4", nama: "Kuesioner H14" },
 ];
 
+// Halaman ini membaca database & sesi login, jadi harus dibuat saat diakses (bukan saat build)
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   const [total, aktif, baru, grouped] = await Promise.all([
     prisma.user.count({ where: { role: "USER" } }),

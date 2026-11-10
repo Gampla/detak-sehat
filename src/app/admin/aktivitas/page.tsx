@@ -3,6 +3,9 @@ import { ACTIVITIES } from "@/lib/activities";
 import { lockedKeys } from "@/lib/activity-lock";
 import LockButton from "@/components/LockButton";
 
+// Halaman ini membaca database & sesi login, jadi harus dibuat saat diakses (bukan saat build)
+export const dynamic = "force-dynamic";
+
 export default async function KelolaAktivitas() {
   const [locked, grouped] = await Promise.all([
     lockedKeys(),
