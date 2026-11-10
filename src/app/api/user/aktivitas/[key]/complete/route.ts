@@ -4,26 +4,33 @@ import { getCurrentUser } from "@/lib/auth";
 import { ACTIVITIES } from "@/lib/activities";
 import { isLocked } from "@/lib/activity-lock";
 
-// Kunci "xxx-materi" = selesai membaca Kartu Materi milik aktivitas "xxx".
+// Kunci yang diterima untuk aktivitas "xxx":
+//   "xxx"         = aktivitas selesai
+//   "xxx-materi"  = Kartu Materi selesai dibaca
+//   "xxx-dibuka"  = formulir sudah dibuka
 export async function POST(_req: Request, { params }: { params: { key: string } }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Silakan masuk dulu ya." }, { status: 401 });
 
   const key = params.key;
-  const isMateri = key.endsWith("-materi");
-  const base = isMateri ? key.slice(0, -"-materi".length) : key;
+  const m = key.match(/^(.*)-(materi|dibuka)$/);
+  const base = m ? m[1] : key;
+  const type = m ? m[2] : "utama";
   const idx = ACTIVITIES.findIndex((a) => a.key === base);
-  if (idx < 0 || !ACTIVITIES[idx].available || (isMateri && idx === 0)) return NextResponse.json({ error: "Aktivitas tidak ditemukan." }, { status: 404 });
-
+  if (idx < 0 || !ACTIVITIES[idx].available || (type === "materi" && idx === 0)) return NextResponse.json({ error: "Aktivitas tidak ditemukan." }, { status: 404 });
   if (await isLocked(base)) return NextResponse.json({ error: "Aktivitas ini sedang dikunci oleh admin." }, { status: 403 });
 
-  // Syarat: aktivitas sebelumnya selesai; formulir juga mensyaratkan materinya sudah dibaca
+  // Syarat berurutan: aktivitas sebelumnya, materi (kecuali Pre-Test), dan untuk "selesai": formulir sudah dibuka
   const needs: string[] = [];
-  if (idx > 0) needs.push(ACTIVITIES[idx - 1].key);
-  if (!isMateri && idx > 0) needs.push(`${base}-materi`);
+  if (idx > 0) needs.push(ACTIVITIES[idx - 1].key);                    // aktivitas sebelumnya selesai
+  if (idx > 0 && type !== "materi") needs.push(`${base}-materi`);       // materi sudah dibaca
+  if (type === "utama") needs.push(`${base}-dibuka`);                   // formulir sudah dibuka
   if (needs.length) {
-    const have = await prisma.activityProgress.count({ where: { userId: user.id, activityKey: { in: needs } } });
-    if (have < needs.length) return NextResponse.json({ error: "Selesaikan langkah sebelumnya dulu ya." }, { status: 403 });
+    const have = await prisma.activityProgress.findMany({ where: { userId: user.id, activityKey: { in: needs } }, select: { activityKey: true } });
+    if (have.length < new Set(needs).size) {
+      const buka = type === "utama" && !have.some((h) => h.activityKey === `${base}-dibuka`);
+      return NextResponse.json({ error: buka ? "Buka formulirnya dulu ya, baru tandai selesai." : "Selesaikan langkah sebelumnya dulu ya." }, { status: 403 });
+    }
   }
   await prisma.activityProgress.upsert({
     where: { userId_activityKey: { userId: user.id, activityKey: key } },

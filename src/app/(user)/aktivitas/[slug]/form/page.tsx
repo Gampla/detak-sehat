@@ -6,16 +6,17 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { bySlug } from "@/lib/activities";
 import Mascot from "@/components/Mascot";
-import CompleteButton from "@/components/CompleteButton";
+import FormStep from "@/components/FormStep";
 
 export default async function FormPage({ params }: { params: { slug: string } }) {
   const a = bySlug(params.slug);
   if (!a) notFound();
   if (await isLocked(a.key)) return <LockedNotice title={a.title} />;
   const user = (await getCurrentUser())!;
-  const rows = await prisma.activityProgress.findMany({ where: { userId: user.id, activityKey: { in: [`${a.key}-materi`, a.key] } } });
+  const rows = await prisma.activityProgress.findMany({ where: { userId: user.id, activityKey: { in: [`${a.key}-materi`, `${a.key}-dibuka`, a.key] } } });
   if (!rows.some((r) => r.activityKey === `${a.key}-materi`)) redirect(`/aktivitas/${a.slug}/materi/1`); // materi wajib dulu
   const done = rows.some((r) => r.activityKey === a.key);
+  const opened = rows.some((r) => r.activityKey === `${a.key}-dibuka`);
 
   return (
     <div className="space-y-6">
@@ -29,12 +30,10 @@ export default async function FormPage({ params }: { params: { slug: string } })
         </div>
       </section>
       <section className="space-y-5 rounded-besar bg-white p-8 text-center">
-        <a href={a.formUrl} target="_blank" rel="noopener noreferrer" className="btn-merah !min-h-[4.5rem] !px-12 !text-2xl">Buka Formulir ↗</a>
-        <p className="text-base opacity-70">Link terbuka di tab baru.</p>
         {done ? (
           <div className="rounded-2xl bg-mint-soft p-4"><p className="font-display text-xl font-bold">{a.title} sudah selesai ✔</p><Link href="/dashboard" className="btn-putih mt-3">Ke beranda</Link></div>
         ) : (
-          <div className="border-t-4 border-dotted border-langit pt-5"><CompleteButton activityKey={a.key} label="Saya sudah selesai mengisi ✔" /></div>
+          <FormStep activityKey={a.key} url={a.formUrl} openLabel="Buka Formulir ↗" doneLabel="Saya sudah selesai mengisi ✔" note="Link terbuka di tab baru." initiallyOpened={opened} />
         )}
       </section>
     </div>

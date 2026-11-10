@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { PRETEST_URL } from "@/lib/activities";
 import Mascot from "@/components/Mascot";
-import CompleteButton from "@/components/CompleteButton";
+import FormStep from "@/components/FormStep";
 
 const steps = [
   { e: "🔗", t: "Buka pre-test", d: "Tekan tombol besar di bawah. Formulir akan terbuka di tab baru.", c: "bg-mentari-soft" },
@@ -13,10 +13,14 @@ const steps = [
   { e: "✅", t: "Kembali ke sini", d: "Setelah selesai, tekan tombol \"Saya sudah selesai\" agar aktivitas berikutnya terbuka.", c: "bg-jantung-soft" },
 ];
 
+// Halaman ini membaca database & sesi login, jadi harus dibuat saat diakses (bukan saat build)
+export const dynamic = "force-dynamic";
+
 export default async function PretestPage() {
   if (await isLocked("pretest")) return <LockedNotice title="Pre-Test" />;
   const user = (await getCurrentUser())!;
   const done = await prisma.activityProgress.findUnique({ where: { userId_activityKey: { userId: user.id, activityKey: "pretest" } } });
+  const opened = !!(await prisma.activityProgress.findUnique({ where: { userId_activityKey: { userId: user.id, activityKey: "pretest-dibuka" } } }));
 
   return (
     <div className="space-y-6">
@@ -41,12 +45,10 @@ export default async function PretestPage() {
       </ol>
 
       <section className="space-y-5 rounded-besar bg-white p-8 text-center">
-        <a href={PRETEST_URL} target="_blank" rel="noopener noreferrer" className="btn-merah !min-h-[4.5rem] !px-12 !text-2xl">Buka Pre-Test ↗</a>
-        <p className="text-base opacity-70">Link terbuka di tab baru. Siapkan waktu sekitar 10 menit.</p>
         {done ? (
           <div className="rounded-2xl bg-mint-soft p-4"><p className="font-display text-xl font-bold">Pre-test sudah selesai ✔</p><Link href="/dashboard" className="btn-putih mt-3">Ke beranda</Link></div>
         ) : (
-          <div className="border-t-4 border-dotted border-langit pt-5"><CompleteButton activityKey="pretest" label="Saya sudah selesai mengerjakan ✔" /></div>
+          <FormStep activityKey="pretest" url={PRETEST_URL} openLabel="Buka Pre-Test ↗" doneLabel="Saya sudah selesai mengerjakan ✔" note="Link terbuka di tab baru. Siapkan waktu sekitar 10 menit." initiallyOpened={opened} />
         )}
       </section>
     </div>
