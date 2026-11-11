@@ -17,10 +17,6 @@ Syarat: [Node.js](https://nodejs.org) versi LTS (18 atau lebih baru).
 
 ## Akun admin bawaan
 
-| Email | Kata sandi |
-| --- | --- |
-| admin@sehathati.com | Admin123! |
-
 Untuk penggunaan sebenarnya, ganti kata sandi ini: isi `ADMIN_PASSWORD` di `.env` sebelum menjalankan `npm run setup` pada database baru.
 
 ## Alur peserta
